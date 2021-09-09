@@ -1,0 +1,2 @@
+# Hashes of file build rules.
+e53259d43b20165b4a0345c72f5787d4 CMakeFiles/ScreenRecorder_autogen

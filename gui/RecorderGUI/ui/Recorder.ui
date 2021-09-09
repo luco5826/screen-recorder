@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>Recorder</class>
+    <widget class="QMainWindow" name="Recorder">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>790</width>
+                <height>162</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>MainWindow</string>
+        </property>
+        <widget class="QWidget" name="centralwidget">
+            <layout class="QGridLayout" name="gridLayout">
+                <item row="0" column="0">
+                    <layout class="QVBoxLayout" name="verticalLayout">
+                        <item>
+                            <widget class="QCheckBox" name="captureAudioCheckBox">
+                                <property name="text">
+                                    <string>Capture Audio</string>
+                                </property>
+                            </widget>
+                        </item>
+                    </layout>
+                </item>
+                <item row="2" column="0">
+                    <widget class="QLabel" name="label_2">
+                        <property name="text">
+                            <string>Default Resolution</string>
+                        </property>
+                    </widget>
+                </item>
+                <item row="2" column="1">
+                    <widget class="QComboBox" name="resolutionComboBox">
+                        <item>
+                            <property name="text">
+                                <string>800x600</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>1280x720</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>1920x1080</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>Custom</string>
+                            </property>
+                        </item>
+                    </widget>
+                </item>
+                <item row="0" column="3" rowspan="6">
+                    <layout class="QVBoxLayout" name="videoControlButtons">
+                        <property name="sizeConstraint">
+                            <enum>QLayout::SetDefaultConstraint</enum>
+                        </property>
+                        <item>
+                            <widget class="QPushButton" name="playButton">
+                                <property name="text">
+                                    <string>Play</string>
+                                </property>
+                                <property name="checkable">
+                                    <bool>false</bool>
+                                </property>
+                            </widget>
+                        </item>
+                        <item>
+                            <widget class="QPushButton" name="pauseButton">
+                                <property name="text">
+                                    <string>Pause</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item>
+                            <widget class="QPushButton" name="stopButton">
+                                <property name="text">
+                                    <string>Stop</string>
+                                </property>
+                            </widget>
+                        </item>
+                    </layout>
+                </item>
+                <item row="0" column="2" alignment="Qt::AlignHCenter">
+                    <widget class="QLabel" name="timeLabel">
+                        <property name="text">
+                            <string>00:00:00</string>
+                        </property>
+                    </widget>
+                </item>
+                <item row="5" column="0">
+                    <widget class="QLabel" name="label_3">
+                        <property name="text">
+                            <string>Current resolution</string>
+                        </property>
+                    </widget>
+                </item>
+                <item row="5" column="1">
+                    <widget class="QLabel" name="currentResolution">
+                        <property name="text">
+                            <string>0</string>
+                        </property>
+                    </widget>
+                </item>
+                <item row="0" column="1" alignment="Qt::AlignHCenter">
+                    <widget class="QLabel" name="label">
+                        <property name="text">
+                            <string>Time</string>
+                        </property>
+                    </widget>
+                </item>
+            </layout>
+        </widget>
+        <widget class="QMenuBar" name="menubar">
+            <property name="geometry">
+                <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>790</width>
+                    <height>23</height>
+                </rect>
+            </property>
+        </widget>
+        <widget class="QStatusBar" name="statusbar"/>
+    </widget>
+    <resources/>
+    <connections/>
+</ui>

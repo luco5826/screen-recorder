@@ -1,0 +1,4 @@
+/home/alessandro/CLionProjects/RecorderGUI/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/alessandro/CLionProjects/RecorderGUI/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/alessandro/CLionProjects/RecorderGUI/cmake-build-debug/CMakeFiles/ScreenRecorder.dir
+/home/alessandro/CLionProjects/RecorderGUI/cmake-build-debug/CMakeFiles/ScreenRecorder_autogen.dir
