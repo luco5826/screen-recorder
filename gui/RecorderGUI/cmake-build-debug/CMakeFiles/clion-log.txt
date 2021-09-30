@@ -1,4 +1,0 @@
-/var/lib/snapd/snap/clion/163/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DEPENDS_USE_COMPILER=FALSE -G "CodeBlocks - Unix Makefiles" /home/alessandro/CLionProjects/RecorderGUI
--- Configuring done
--- Generating done
--- Build files have been written to: /home/alessandro/CLionProjects/RecorderGUI/cmake-build-debug
