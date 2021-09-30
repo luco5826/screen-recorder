@@ -32,9 +32,9 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
-        ui/MainView.ui ui/Recorder.ui
-        mainview.cpp mainview.h recorder.cpp recorder.h resizableframe.cpp resizableframe.h
+        ui/MainView.ui recorder.cpp recorder.h ui/Recorder.ui resizableframe.cpp resizableframe.h
         ffmpeg/ScreenRecorder.h ffmpeg/ScreenRecorder.cpp)
+qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui ui/MainView.ui)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenRecorder
@@ -55,13 +55,10 @@ endif()
 
 target_link_libraries(ScreenRecorder PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-# Libraries used by FFMPEG to record the screen 
-## PTHREADS
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(ScreenRecorder PRIVATE Threads::Threads)
 
-## LIBAV files
 find_library(AVCODEC_LIBRARY avcodec)
 find_library(AVFORMAT_LIBRARY avformat)
 find_library(SWSCALE_LIBRARY swscale)
@@ -86,4 +83,5 @@ set_target_properties(ScreenRecorder PROPERTIES
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(ScreenRecorder)
+    qt5_wrap_ui()
 endif()
