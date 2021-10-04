@@ -7,11 +7,10 @@
 #include "ffmpeg/ScreenRecorder.h"
 
 Recorder::Recorder(QWidget *parent)
-    : 
-    QMainWindow(parent), 
-    ui(new Ui::Recorder), 
-    screenRecorder(new ScreenRecorder("output.mp4", "")),
-    currentState(State::STOP)
+    : QMainWindow(parent),
+      ui(new Ui::Recorder),
+      screenRecorder(new ScreenRecorder("output.mp4", "")),
+      currentState(State::STOP)
 {
   ui->setupUi(this);
   screenRecorder->Init();
@@ -62,11 +61,13 @@ void Recorder::on_pauseButton_clicked()
   {
     ui->pauseButton->setText("Resume");
     currentState = PAUSE;
+    screenRecorder->SetPaused(true);
     timer.stop();
   }
   else if (currentState == PAUSE)
   {
     ui->pauseButton->setText("Pause");
+    screenRecorder->SetPaused(false);
     currentState = RECORDING;
     timer.start();
   }
@@ -75,7 +76,7 @@ void Recorder::on_pauseButton_clicked()
 void Recorder::on_stopButton_clicked()
 {
   currentState = STOP;
-  timeToDisplay.setHMS(0,0,0);
+  timeToDisplay.setHMS(0, 0, 0);
   ui->timeLabel->setText(timeToDisplay.toString("hh:mm:ss"));
 
   ui->resolutionComboBox->setDisabled(false);

@@ -70,18 +70,19 @@ private:
   AVStream *videoOutStream;
   AVCodecContext *videoOutCodecCtx;
 
-  std::atomic_bool isRun;
-  std::thread audioThread;
+  std::atomic_bool isRun, isPaused;
+  std::thread workerThread;
 
 public:
   ScreenRecorder(string filepath, string device)
-      : outfile(filepath), deviceName(device), failReason(""), isRun(false) {}
+      : outfile(filepath), deviceName(device), failReason(""), isRun(false), isPaused(false) {}
 
   void Init();
   void OpenAudio();
   void OpenVideo(int x = 0, int y = 0, int width = 800, int height = 600, int framerate = 30);
   void Start();
   void Stop();
+  void SetPaused(bool paused);
 
   ~ScreenRecorder()
   {

@@ -225,20 +225,20 @@ void ScreenRecorder::Start()
   if (videoInFormatCtx)
     av_dump_format(videoInFormatCtx, 0, NULL, 0);
   av_dump_format(outFormatCtx, 0, NULL, 1);
-  audioThread = std::thread([this]()
-                            {
-                              this->isRun = true;
-                              puts("Start record.");
-                              fflush(stdout);
-                              try
-                              {
-                                this->StartEncode();
-                              }
-                              catch (std::exception e)
-                              {
-                                this->failReason = e.what();
-                              }
-                            });
+  workerThread = std::thread([this]()
+                             {
+                               this->isRun = true;
+                               puts("Start record.");
+                               fflush(stdout);
+                               try
+                               {
+                                 this->StartEncode();
+                               }
+                               catch (std::exception e)
+                               {
+                                 this->failReason = e.what();
+                               }
+                             });
 }
 
 void ScreenRecorder::Stop()
@@ -247,7 +247,7 @@ void ScreenRecorder::Stop()
 
   if (!r)
     return; //avoid run twice
-  audioThread.join();
+  workerThread.join();
 
   int ret = av_write_trailer(outFormatCtx);
   if (ret < 0)
@@ -276,6 +276,11 @@ void ScreenRecorder::Stop()
 
   puts("Stop record.");
   fflush(stdout);
+}
+
+void ScreenRecorder::SetPaused(bool paused)
+{
+  isPaused.exchange(paused);
 }
 
 void ScreenRecorder::StartEncode()
@@ -308,6 +313,11 @@ void ScreenRecorder::StartEncode()
     {
       // Video packet
       av_read_frame(videoInFormatCtx, inputPacket);
+      if (isPaused)
+      {
+        av_packet_unref(inputPacket);
+        continue;
+      }
       avcodec_send_packet(videoInCodecCtx, inputPacket);
       avcodec_receive_frame(videoInCodecCtx, inputFrame);
 
@@ -347,6 +357,11 @@ void ScreenRecorder::StartEncode()
       if (ret < 0)
       {
         throw std::runtime_error("can not read frame");
+      }
+      if (isPaused)
+      {
+        av_packet_unref(inputPacket);
+        continue;
       }
       ret = avcodec_send_packet(audioInCodecCtx, inputPacket);
       if (ret < 0)
