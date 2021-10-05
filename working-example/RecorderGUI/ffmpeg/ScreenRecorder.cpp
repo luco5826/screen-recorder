@@ -15,12 +15,6 @@ void ScreenRecorder::Init()
   {
     throw std::runtime_error("Failed to alloc ouput context");
   }
-
-  ret = avio_open(&outFormatCtx->pb, outfile.c_str(), AVIO_FLAG_WRITE);
-  if (ret < 0)
-  {
-    throw std::runtime_error("Fail to open output file.");
-  }
 }
 
 void ScreenRecorder::OpenAudio()
@@ -115,8 +109,8 @@ void ScreenRecorder::OpenAudio()
 
 void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerate)
 {
-  this->width = width;
-  this->height = height;
+  this->width = std::max(2, width % 2 == 0 ? width : width - 1);
+  this->height = std::max(2, height % 2 == 0 ? height : height - 1);
   this->framerate = framerate;
 
   AVDictionary *options = nullptr;
@@ -212,7 +206,18 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 
 void ScreenRecorder::Start()
 {
+  int ret;
+  auto t = std::time(nullptr);
+  auto tm = std::localtime(&t);
 
+  std::ostringstream newFileName;
+  newFileName << outfile << std::put_time(tm, "-%Y-%m-%d_%H-%M-%S") << ".mp4";
+
+  ret = avio_open(&outFormatCtx->pb, newFileName.str().c_str(), AVIO_FLAG_WRITE);
+  if (ret < 0)
+  {
+    throw std::runtime_error("Fail to open output file.");
+  }
   // write file header
   if (outFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
     outFormatCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
