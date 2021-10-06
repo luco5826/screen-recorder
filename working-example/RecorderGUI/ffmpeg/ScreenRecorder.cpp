@@ -117,7 +117,7 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 #ifdef __linux__
   // X11 specific parameters
   std::ostringstream size_ss;
-  size_ss << width << "x" << height;
+  size_ss << this->width << "x" << this->height;
   std::ostringstream framerate_ss;
   framerate_ss << framerate;
   av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
@@ -147,7 +147,8 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   //"[[VIDEO]:[AUDIO]]"
 #elif __linux__
   std::ostringstream deviceName_ss;
-  deviceName_ss << ":0.0+" << x << "," << y;
+  auto x11display = std::string(getenv("DISPLAY"));
+  deviceName_ss << x11display << ".0+" << x << "," << y;
   deviceName = deviceName_ss.str();
   AVInputFormat *inputFormat = av_find_input_format("x11grab");
 #endif
@@ -182,8 +183,8 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   // videoOutCodecCtx->sample_fmt = videoOutCodec->sample_fmts[0]; //for aac , there is AV_SAMPLE_FMT_FLTP =8
   videoOutCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
   videoOutCodecCtx->bit_rate = 1200000;
-  videoOutCodecCtx->width = width;
-  videoOutCodecCtx->height = height;
+  videoOutCodecCtx->width = this->width;
+  videoOutCodecCtx->height = this->height;
   videoOutCodecCtx->time_base = (AVRational){1, framerate};
   // videoOutCodecCtx->time_base = videoInCodecCtx->time_base;
   // videoOutCodecCtx->time_base.num = 1;
