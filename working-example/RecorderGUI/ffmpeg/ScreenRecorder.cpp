@@ -38,12 +38,6 @@ void ScreenRecorder::Init()
   {
     throw std::runtime_error("Failed to alloc ouput context");
   }
-
-  ret = avio_open(&outFormatCtx->pb, outfile.c_str(), AVIO_FLAG_WRITE);
-  if (ret < 0)
-  {
-    throw std::runtime_error("Fail to open output file.");
-  }
 }
 
 void ScreenRecorder::OpenAudio()
@@ -139,16 +133,15 @@ void ScreenRecorder::OpenAudio()
 
 void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerate)
 {
-
-  this->width = width;
-  this->height = height;
+  this->width = std::max(2, width % 2 == 0 ? width : width - 1);
+  this->height = std::max(2, height % 2 == 0 ? height : height - 1);
   this->framerate = framerate;
 
   AVDictionary *options = nullptr;
 #ifdef __linux__
   // X11 specific parameters
   std::ostringstream size_ss;
-  size_ss << width << "x" << height;
+  size_ss << this->width << "x" << this->height;
   std::ostringstream framerate_ss;
   framerate_ss << framerate;
   av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
@@ -188,7 +181,8 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   //"[[VIDEO]:[AUDIO]]"
 #elif __linux__
   std::ostringstream deviceName_ss;
-  deviceName_ss << ":0.0+" << x << "," << y;
+  auto x11display = std::string(getenv("DISPLAY"));
+  deviceName_ss << x11display << ".0+" << x << "," << y;
   deviceName = deviceName_ss.str();
   inputFormat = av_find_input_format("x11grab");
 #endif
@@ -225,8 +219,8 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   videoOutCodecCtx->codec_id = videoInFormatCtx->video_codec_id;
   videoOutCodecCtx->pix_fmt = PIX_VIDEOCODEC_OUT;
   videoOutCodecCtx->bit_rate = 1200000;
-  videoOutCodecCtx->width = width;
-  videoOutCodecCtx->height = height;
+  videoOutCodecCtx->width = this->width;
+  videoOutCodecCtx->height = this->height;
   videoOutCodecCtx->time_base = (AVRational){1, framerate};
   // videoOutCodecCtx->time_base = videoInCodecCtx->time_base;
   // videoOutCodecCtx->time_base.num = 1;
@@ -249,7 +243,18 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 
 void ScreenRecorder::Start()
 {
+  int ret;
+  auto t = std::time(nullptr);
+  auto tm = std::localtime(&t);
 
+  std::ostringstream newFileName;
+  newFileName << outfile << std::put_time(tm, "-%Y-%m-%d_%H-%M-%S") << ".mp4";
+
+  ret = avio_open(&outFormatCtx->pb, newFileName.str().c_str(), AVIO_FLAG_WRITE);
+  if (ret < 0)
+  {
+    throw std::runtime_error("Fail to open output file.");
+  }
   // write file header
   if (outFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
     outFormatCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -262,20 +267,20 @@ void ScreenRecorder::Start()
   if (videoInFormatCtx)
     av_dump_format(videoInFormatCtx, 0, NULL, 0);
   av_dump_format(outFormatCtx, 0, NULL, 1);
-  audioThread = std::thread([this]()
-                            {
-                              this->isRun = true;
-                              puts("Start record.");
-                              fflush(stdout);
-                              try
-                              {
-                                this->StartEncode();
-                              }
-                              catch (std::exception e)
-                              {
-                                this->failReason = e.what();
-                              }
-                            });
+  workerThread = std::thread([this]()
+                             {
+                               this->isRun = true;
+                               puts("Start record.");
+                               fflush(stdout);
+                               try
+                               {
+                                 this->StartEncode();
+                               }
+                               catch (std::exception e)
+                               {
+                                 this->failReason = e.what();
+                               }
+                             });
 }
 
 void ScreenRecorder::Stop()
@@ -284,7 +289,7 @@ void ScreenRecorder::Stop()
 
   if (!r)
     return; //avoid run twice
-  audioThread.join();
+  workerThread.join();
 
   int ret = av_write_trailer(outFormatCtx);
   if (ret < 0)
@@ -313,6 +318,11 @@ void ScreenRecorder::Stop()
 
   puts("Stop record.");
   fflush(stdout);
+}
+
+void ScreenRecorder::SetPaused(bool paused)
+{
+  isPaused.exchange(paused);
 }
 
 void ScreenRecorder::StartEncode()
@@ -349,6 +359,11 @@ void ScreenRecorder::StartEncode()
       ret = av_read_frame(videoInFormatCtx, inputPacket);
       if (ret == AVERROR(EAGAIN))
       {
+        continue;
+      }
+      if (isPaused)
+      {
+        av_packet_unref(inputPacket);
         continue;
       }
       avcodec_send_packet(videoInCodecCtx, inputPacket);
@@ -390,6 +405,11 @@ void ScreenRecorder::StartEncode()
       if (ret < 0)
       {
         throw std::runtime_error("can not read frame");
+      }
+      if (isPaused)
+      {
+        av_packet_unref(inputPacket);
+        continue;
       }
       ret = avcodec_send_packet(audioInCodecCtx, inputPacket);
       if (ret < 0)

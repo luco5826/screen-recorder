@@ -8,6 +8,10 @@ ResizableFrame::ResizableFrame(QWidget *parent, int width, int height) : frameWi
 {
   setMouseTracking(true);
   setFrameStyle(QFrame::Box | QFrame::Plain);
+#ifdef __linux__
+  // Not sure if this works on other platforms as well
+  setWindowFlags(Qt::FramelessWindowHint);
+#endif
   //setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowTransparentForInput | Qt::WindowStaysOnTopHint);
   setGeometry(posX, posY, width, height); // Just some fixed values to test
                                           // Set a solid green thick border.

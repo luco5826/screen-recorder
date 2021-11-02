@@ -9,7 +9,7 @@
 Recorder::Recorder(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::Recorder),
-      screenRecorder(new ScreenRecorder("output.mp4", "")),
+      screenRecorder(new ScreenRecorder("output", "")),
       currentState(State::STOP)
 {
   ui->setupUi(this);
@@ -61,11 +61,13 @@ void Recorder::on_pauseButton_clicked()
   {
     ui->pauseButton->setText("Resume");
     currentState = PAUSE;
+    screenRecorder->SetPaused(true);
     timer.stop();
   }
   else if (currentState == PAUSE)
   {
     ui->pauseButton->setText("Pause");
+    screenRecorder->SetPaused(false);
     currentState = RECORDING;
     timer.start();
   }
@@ -85,6 +87,7 @@ void Recorder::on_stopButton_clicked()
   ui->pauseButton->setText("Pause");
   screenRecorder->Stop();
   timer.stop();
+  screenRecorder->Init();
 }
 
 void Recorder::on_resolutionComboBox_currentTextChanged(const QString &arg1)
