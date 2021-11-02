@@ -3,6 +3,29 @@
 #include <assert.h>
 #endif
 
+const auto PIX_OUTPUT_FMT = AV_PIX_FMT_YUV420P;
+const auto PIX_VIDEOCODEC_OUT = AV_PIX_FMT_YUV420P;
+const auto PIX_SWS_CONTEXT = AV_PIX_FMT_YUV420P;
+
+static AVPixelFormat correct_for_deprecated_pixel_format(AVPixelFormat pix_fmt)
+{
+  // Fix swscaler deprecated pixel format warning
+  // (YUVJ has been deprecated, change pixel format to regular YUV)
+  switch (pix_fmt)
+  {
+  case AV_PIX_FMT_YUVJ420P:
+    return AV_PIX_FMT_YUV420P;
+  case AV_PIX_FMT_YUVJ422P:
+    return AV_PIX_FMT_YUV422P;
+  case AV_PIX_FMT_YUVJ444P:
+    return AV_PIX_FMT_YUV444P;
+  case AV_PIX_FMT_YUVJ440P:
+    return AV_PIX_FMT_YUV440P;
+  default:
+    return pix_fmt;
+  }
+}
+
 const AVSampleFormat requireAudioFmt = AV_SAMPLE_FMT_FLTP;
 
 void ScreenRecorder::Init()
@@ -28,6 +51,7 @@ void ScreenRecorder::OpenAudio()
   AVDictionary *options = nullptr;
   int ret = 0;
   //ref: https://ffmpeg.org/ffmpeg-devices.html
+  AVInputFormat *inputFormat;
 #ifdef WINDOWS
   if (deviceName == "")
   {
@@ -38,15 +62,15 @@ void ScreenRecorder::OpenAudio()
     }
   }
   deviceName = "audio=" + deviceName;
-  AVInputFormat *inputFormat = av_find_input_format("dshow");
-#elif MACOS
+  inputFormat = av_find_input_format("dshow");
+#elif __APPLE__
   if (deviceName == "")
     deviceName = ":0";
-  AVInputFormat *inputFormat = av_find_input_format("avfoundation");
+  inputFormat = av_find_input_format("avfoundation");
   //"[[VIDEO]:[AUDIO]]"
 #elif __linux__
   deviceName = "default";
-  AVInputFormat *inputFormat = av_find_input_format("pulse");
+  inputFormat = av_find_input_format("pulse");
 #endif
   ret = avformat_open_input(&audioInFormatCtx, deviceName.c_str(), inputFormat, &options);
   if (ret != 0)
@@ -115,6 +139,7 @@ void ScreenRecorder::OpenAudio()
 
 void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerate)
 {
+
   this->width = width;
   this->height = height;
   this->framerate = framerate;
@@ -135,6 +160,7 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   int ret;
 
   //ref: https://ffmpeg.org/ffmpeg-devices.html
+  AVInputFormat *inputFormat;
 #ifdef WINDOWS
   if (deviceName == "")
   {
@@ -145,17 +171,26 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
     }
   }
   deviceName = "audio=" + deviceName;
-  AVInputFormat *inputFormat = av_find_input_format("dshow");
-#elif MACOS
+  inputFormat = av_find_input_format("dshow");
+#elif __APPLE__
+  show_avfoundation_device();
   if (deviceName == "")
-    deviceName = ":0";
-  AVInputFormat *inputFormat = av_find_input_format("avfoundation");
+    deviceName = "1:";
+  inputFormat = av_find_input_format("avfoundation");
+  std::ostringstream size_ss;
+  size_ss << width << "x" << height;
+  av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
+  av_dict_set(&options, "pixel_format", "yuyv422", 0);
+  av_dict_set(&options, "format", "yuv420p", 0);
+
+  //av_dict_set(&options, "framerate", "30", 0);
+
   //"[[VIDEO]:[AUDIO]]"
 #elif __linux__
   std::ostringstream deviceName_ss;
   deviceName_ss << ":0.0+" << x << "," << y;
   deviceName = deviceName_ss.str();
-  AVInputFormat *inputFormat = av_find_input_format("x11grab");
+  inputFormat = av_find_input_format("x11grab");
 #endif
 
   ret = avformat_open_input(&videoInFormatCtx, deviceName.c_str(), inputFormat, &options);
@@ -186,7 +221,9 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   // videoOutCodecCtx->channel_layout = av_get_default_channel_layout(videoInStream->codecpar->channels);
   // videoOutCodecCtx->sample_rate = videoInStream->codecpar->sample_rate;
   // videoOutCodecCtx->sample_fmt = videoOutCodec->sample_fmts[0]; //for aac , there is AV_SAMPLE_FMT_FLTP =8
-  videoOutCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+  videoOutCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
+  videoOutCodecCtx->codec_id = videoInFormatCtx->video_codec_id;
+  videoOutCodecCtx->pix_fmt = PIX_VIDEOCODEC_OUT;
   videoOutCodecCtx->bit_rate = 1200000;
   videoOutCodecCtx->width = width;
   videoOutCodecCtx->height = height;
@@ -292,7 +329,9 @@ void ScreenRecorder::StartEncode()
   uint64_t videoFrameCount = 0;
 
   int64_t nextVideoPTS = 0, nextAudioPTS = 0;
-  auto swsContext = sws_getContext(width, height, videoInCodecCtx->pix_fmt, width, height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, 0, 0, 0);
+  auto src_pix_fmt = correct_for_deprecated_pixel_format(videoInCodecCtx->pix_fmt);
+  auto swsContext = sws_getContext(width, height, src_pix_fmt, width, height, PIX_SWS_CONTEXT, SWS_BICUBIC, nullptr,
+                                   nullptr, nullptr);
 
   while (isRun)
   {
@@ -307,11 +346,15 @@ void ScreenRecorder::StartEncode()
     if (choice == -1)
     {
       // Video packet
-      av_read_frame(videoInFormatCtx, inputPacket);
+      ret = av_read_frame(videoInFormatCtx, inputPacket);
+      if (ret == AVERROR(EAGAIN))
+      {
+        continue;
+      }
       avcodec_send_packet(videoInCodecCtx, inputPacket);
       avcodec_receive_frame(videoInCodecCtx, inputFrame);
 
-      outputFrame->format = AV_PIX_FMT_YUV420P;
+      outputFrame->format = PIX_OUTPUT_FMT;
       outputFrame->width = width;
       outputFrame->height = height;
       ret = av_frame_get_buffer(outputFrame, 0);

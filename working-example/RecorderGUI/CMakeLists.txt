@@ -1,16 +1,22 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(ScreenRecorder VERSION 0.1 LANGUAGES CXX)
-
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(MACOSX TRUE)
+endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(UI_DIR ./ui)
 include_directories(${UI_DIR} ffmpeg/)
+
 
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${UI_DIR}/)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-
+if(MACOSX)
+    set(CMAKE_PREFIX_PATH "/Users/alessandrobacci/Qt/6.2.0/macos/lib/cmake")
+    include_directories(/usr/local/include)
+endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -34,7 +40,8 @@ set(PROJECT_SOURCES
         main.cpp
         ui/MainView.ui recorder.cpp recorder.h ui/Recorder.ui resizableframe.cpp resizableframe.h
         ffmpeg/ScreenRecorder.h ffmpeg/ScreenRecorder.cpp)
-qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui ui/MainView.ui)
+#qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui ui/MainView.ui)
+qt_wrap_ui(PROJECT_SOURCES ui/Recorder.ui ui/MainView.ui)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenRecorder
@@ -80,8 +87,8 @@ set_target_properties(ScreenRecorder PROPERTIES
         MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         )
-
+#qt_finalize_executable(ScreenRecorder)
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(ScreenRecorder)
-    qt5_wrap_ui()
+#    qt5_wrap_ui()
 endif()
