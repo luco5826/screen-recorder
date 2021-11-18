@@ -99,11 +99,3 @@ void Recorder::on_resolutionComboBox_currentTextChanged(const QString &arg1)
     rf->setFrameHeight(arg1.split("x")[1].toInt());
   }
 }
-
-void Recorder::on_drawRegionButton_clicked()
-{
-  if (rf->isHidden())
-    rf->show();
-  else
-    rf->hide();
-}

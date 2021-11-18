@@ -20,3 +20,4 @@ working-example/RecorderGUI/config.tests/static_link_order/Makefile
 working-example/RecorderGUI/config.tests/static_link_order/static_link_order_test
 moc_*
 mocs_*
+working-example/RecorderGUI/CMakeLists.txt.user

@@ -5,3 +5,4 @@ CMakeCache.txt
 cmake_install.cmake
 /ScreenRecorder
 ui_*
+.cmake

@@ -38,10 +38,10 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
-        ui/MainView.ui recorder.cpp recorder.h ui/Recorder.ui resizableframe.cpp resizableframe.h
+         recorder.cpp recorder.h ui/Recorder.ui resizableframe.cpp resizableframe.h
         ffmpeg/ScreenRecorder.h ffmpeg/ScreenRecorder.cpp)
-#qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui ui/MainView.ui)
-qt_wrap_ui(PROJECT_SOURCES ui/Recorder.ui ui/MainView.ui)
+#qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
+qt_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenRecorder
