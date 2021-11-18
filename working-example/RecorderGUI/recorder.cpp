@@ -14,7 +14,6 @@ Recorder::Recorder(QWidget *parent)
 {
   ui->setupUi(this);
   screenRecorder->Init();
-
   timeToDisplay = QTime(0, 0, 0);
   timer.setInterval(1000);
   connect(&timer, SIGNAL(timeout()), this, SLOT(updateCaption()));
@@ -39,7 +38,7 @@ void Recorder::on_playButton_clicked()
   currentState = RECORDING;
   rf->hide();
   {
-    screenRecorder->OpenVideo(rf->pos().x(), rf->pos().y(), rf->width(), rf->height(), 30);
+    screenRecorder->OpenVideo(rf->pos().x(), rf->pos().y(), rf->getWidth(), rf->getHeight(), 30);
     if (ui->captureAudioCheckBox->isChecked())
       screenRecorder->OpenAudio();
     screenRecorder->Start();

@@ -169,7 +169,7 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 #elif __APPLE__
   //show_avfoundation_device();
 
-  deviceName = "1:0";
+  deviceName = "1:";
   inputFormat = av_find_input_format("avfoundation");
   std::ostringstream size_ss;
   size_ss << width << "x" << height;

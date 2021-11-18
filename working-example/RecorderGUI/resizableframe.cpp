@@ -65,8 +65,15 @@ void ResizableFrame::mousePressEvent(QMouseEvent *event)
 
 void ResizableFrame::resizeEvent(QResizeEvent *event)
 {
+#if __APPLE__
+  frameWidth = width() * 2;
+  frameHeight = height() * 2;
+#else
   frameWidth = width();
   frameHeight = height();
+
+#endif
+
   label->setText(QString::number(frameWidth) + "x" + QString::number(frameHeight));
 }
 
@@ -254,4 +261,13 @@ void ResizableFrame::mouseMoveEvent(QMouseEvent *event)
     break;
   }
   // qDebug() << "Frame geometry: "<< frameGeometry();
+}
+
+int ResizableFrame::getWidth()
+{
+  return frameWidth;
+}
+int ResizableFrame::getHeight()
+{
+  return frameHeight;
 }

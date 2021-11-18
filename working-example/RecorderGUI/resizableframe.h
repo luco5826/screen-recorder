@@ -16,6 +16,8 @@ public:
     ~ResizableFrame();
     void setFrameWidth(int width);
     void setFrameHeight(int height);
+    int getWidth();
+    int getHeight();
 //void setMainWindow(Ui::MainWindow *ui);
 
     enum startPositions {topleft, left, bottomleft, bottom, bottomright, right, topright, top, move} startPositions;
