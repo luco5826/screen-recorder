@@ -4,6 +4,7 @@
 out
 CMakeFiles/
 cmake-build-debug
+<<<<<<< HEAD
 .DS_Store
 gui/RecorderGUI/.idea/vcs.xml
 working-example/RecorderGUI/cmake_install.cmake
@@ -21,3 +22,15 @@ working-example/RecorderGUI/config.tests/static_link_order/static_link_order_tes
 moc_*
 mocs_*
 working-example/RecorderGUI/CMakeLists.txt.user
+=======
+windows-screen-recorder/
+*_autogen
+*.dir
+ALL_BUILD*
+ZERO_CHECK*
+*.cmake
+CMakeCache.txt
+*.sln
+*.vcxproj*
+executables
+>>>>>>> Windows fix

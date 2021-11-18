@@ -40,9 +40,9 @@ extern "C"
 
 #include <string>
 #include <cstdint>
+#include <thread>
 #ifdef __linux__
 #include <atomic>
-#include <thread>
 #endif
 
 using std::string;

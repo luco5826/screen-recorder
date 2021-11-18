@@ -1,43 +1,43 @@
 cmake_minimum_required(VERSION 3.5)
 
+set(CMAKE_CXX_COMPILER_WORKS 1)
+
+set(CMAKE_CXX_COMPILER "g++" )
+set(CMAKE_MAKE_PROGRAM "make")
+
 project(ScreenRecorder VERSION 0.1 LANGUAGES CXX)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(MACOSX TRUE)
 endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(UI_DIR ./ui)
-include_directories(${UI_DIR} ffmpeg/)
+include_directories(${UI_DIR} ffmpeg/ include/)
 
 
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${UI_DIR}/)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
+<<<<<<< HEAD
 if(MACOSX)
     set(CMAKE_PREFIX_PATH "/Users/alessandrobacci/Qt/6.2.0/macos/lib/cmake")
     include_directories(/usr/local/include)
 endif()
+=======
+>>>>>>> Windows fix
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# QtCreator supports the following variables for Android, which are identical to qmake Android variables.
-# Check https://doc.qt.io/qt/deployment-android.html for more information.
-# They need to be set before the find_package( ...) calls below.
+set(CMAKE_PREFIX_PATH "F:/Programmi/QT/5.12.11/winrt_x64_msvc2017")
+find_package(QT NAMES Qt5 COMPONENTS Widgets REQUIRED)
+find_package(QT NAMES Qt5 COMPONENTS Core REQUIRED)
+find_package(QT NAMES Qt5 COMPONENTS Gui REQUIRED)
 
-#if(ANDROID)
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-#    if (ANDROID_ABI STREQUAL "armeabi-v7a")
-#        set(ANDROID_EXTRA_LIBS
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libcrypto.so
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
-#    endif()
-#endif()
-
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
+<<<<<<< HEAD
         resources.qrc
         recorder.cpp
         recorder.h
@@ -48,6 +48,19 @@ set(PROJECT_SOURCES
         ffmpeg/ScreenRecorder.cpp)
 #qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
 qt_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
+=======
+        recorder.cpp
+        recorder.h
+        resizableframe.cpp
+        resizableframe.h
+        ui/MainView.ui
+        ui/Recorder.ui
+        ffmpeg/ScreenRecorder.h
+        ffmpeg/ScreenRecorder.cpp
+        ffmpeg/ListAVDevices.cpp
+        ffmpeg/ListAVDevices.h)
+qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui ui/MainView.ui)
+>>>>>>> Windows fix
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenRecorder
@@ -68,9 +81,13 @@ endif()
 
 target_link_libraries(ScreenRecorder PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-target_link_libraries(ScreenRecorder PRIVATE Threads::Threads)
+#option(CMAKE_USE_WIN32_THREADS_INIT "using WIN32 threads" ON)
+#set(THREADS_PREFER_PTHREAD_FLAG ON)
+#find_package(Threads REQUIRED)
+#target_link_libraries(ScreenRecorder PRIVATE Threads::Threads)
+
+set(CMAKE_PREFIX_PATH lib/)
+
 
 find_library(AVCODEC_LIBRARY avcodec)
 find_library(AVFORMAT_LIBRARY avformat)

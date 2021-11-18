@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ScreenRecorder_autogen
 .vscode
 Makefile
@@ -6,3 +7,7 @@ cmake_install.cmake
 /ScreenRecorder
 ui_*
 .cmake
+=======
+.vs
+.idea
+>>>>>>> Windows fix
