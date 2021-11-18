@@ -58,14 +58,15 @@ void ScreenRecorder::OpenAudio()
   deviceName = "audio=" + deviceName;
   inputFormat = av_find_input_format("dshow");
 #elif __APPLE__
-  if (deviceName == "")
-    deviceName = ":0";
+  deviceName = ":0";
   inputFormat = av_find_input_format("avfoundation");
+
   //"[[VIDEO]:[AUDIO]]"
 #elif __linux__
   deviceName = "default";
   inputFormat = av_find_input_format("pulse");
 #endif
+
   ret = avformat_open_input(&audioInFormatCtx, deviceName.c_str(), inputFormat, &options);
   if (ret != 0)
   {
@@ -166,9 +167,9 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   deviceName = "audio=" + deviceName;
   inputFormat = av_find_input_format("dshow");
 #elif __APPLE__
-  show_avfoundation_device();
-  if (deviceName == "")
-    deviceName = "1:";
+  //show_avfoundation_device();
+
+  deviceName = "1:0";
   inputFormat = av_find_input_format("avfoundation");
   std::ostringstream size_ss;
   size_ss << width << "x" << height;
@@ -366,9 +367,16 @@ void ScreenRecorder::StartEncode()
         av_packet_unref(inputPacket);
         continue;
       }
-      avcodec_send_packet(videoInCodecCtx, inputPacket);
-      avcodec_receive_frame(videoInCodecCtx, inputFrame);
-
+      ret = avcodec_send_packet(videoInCodecCtx, inputPacket);
+      if (ret == AVERROR(EAGAIN))
+      {
+        continue;
+      }
+      ret = avcodec_receive_frame(videoInCodecCtx, inputFrame);
+      if (ret == AVERROR(EAGAIN))
+      {
+        continue;
+      }
       outputFrame->format = PIX_OUTPUT_FMT;
       outputFrame->width = width;
       outputFrame->height = height;
