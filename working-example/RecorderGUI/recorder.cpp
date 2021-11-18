@@ -108,8 +108,16 @@ void Recorder::on_resolutionComboBox_currentTextChanged(const QString &arg1)
 {
   if (rf->isHidden() && arg1 == "Custom")
     rf->show();
-  else
-  {
+  else if (arg1 == "Full screen") {
+    #if __APPLE__
+      // Apply the scale factor on Mac OS
+      rf->setFrameWidth(screen()->geometry().width() * 2);
+      rf->setFrameHeight(screen()->geometry().height() * 2);
+    #else
+      rf->setFrameWidth(screen()->geometry().width() );
+      rf->setFrameHeight(screen()->geometry().height() );
+    #endif
+  } else {
     rf->setFrameWidth(arg1.split("x")[0].toInt());
     rf->setFrameHeight(arg1.split("x")[1].toInt());
   }

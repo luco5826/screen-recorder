@@ -121,12 +121,7 @@
       </item>
       <item>
        <property name="text">
-        <string>1280x720</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>1920x1080</string>
+        <string>Full screen</string>
        </property>
       </item>
       <item>
