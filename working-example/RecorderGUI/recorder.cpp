@@ -2,6 +2,7 @@
 #include "ui_Recorder.h"
 #include <QTimer>
 #include <QTime>
+#include <QMessageBox>
 #include <QDebug>
 
 #include "ffmpeg/ScreenRecorder.h"
@@ -10,10 +11,11 @@ Recorder::Recorder(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::Recorder),
       currentState(State::STOP),
-      screenRecorder(new ScreenRecorder("output", ""))
+      screenRecorder(new ScreenRecorder("output"))
 {
   ui->setupUi(this);
   screenRecorder->Init();
+  screenRecorder->RegisterFailureObserver(this);
   timeToDisplay = QTime(0, 0, 0);
   timer.setInterval(100);
   connect(&timer, SIGNAL(timeout()), this, SLOT(updateCaption()));
@@ -33,15 +35,29 @@ Recorder::~Recorder()
   delete ui;
 }
 
+void Recorder::handleFailure(const std::string &message)
+{
+  timer.stop();
+  QMessageBox messageBox;
+  messageBox.critical(0, "Error", QString::fromStdString(message));
+  messageBox.setFixedSize(500, 200);
+  QApplication::exit(-1);
+}
+
 void Recorder::on_playButton_clicked()
 {
   currentState = RECORDING;
   rf->hide();
+  try
   {
     screenRecorder->OpenVideo(rf->pos().x(), rf->pos().y(), rf->getWidth(), rf->getHeight(), 30);
     if (ui->captureAudioCheckBox->isChecked())
       screenRecorder->OpenAudio();
     screenRecorder->Start();
+  }
+  catch (const std::runtime_error &e)
+  {
+    handleFailure(e.what());
   }
 
   ui->resolutionComboBox->setDisabled(true);

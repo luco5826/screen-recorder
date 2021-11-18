@@ -6,6 +6,7 @@
 const auto PIX_OUTPUT_FMT = AV_PIX_FMT_YUV420P;
 const auto PIX_VIDEOCODEC_OUT = AV_PIX_FMT_YUV420P;
 const auto PIX_SWS_CONTEXT = AV_PIX_FMT_YUV420P;
+const AVSampleFormat requireAudioFmt = AV_SAMPLE_FMT_FLTP;
 
 static AVPixelFormat correct_for_deprecated_pixel_format(AVPixelFormat pix_fmt)
 {
@@ -26,8 +27,6 @@ static AVPixelFormat correct_for_deprecated_pixel_format(AVPixelFormat pix_fmt)
   }
 }
 
-const AVSampleFormat requireAudioFmt = AV_SAMPLE_FMT_FLTP;
-
 void ScreenRecorder::Init()
 {
   avdevice_register_all();
@@ -36,41 +35,44 @@ void ScreenRecorder::Init()
   ret = avformat_alloc_output_context2(&outFormatCtx, NULL, "mp4", NULL);
   if (ret < 0)
   {
-    throw std::runtime_error("Failed to alloc ouput context");
+    throw std::runtime_error("Failed to initialize output context");
   }
+}
+
+void ScreenRecorder::RegisterFailureObserver(IFailureObserver *observer)
+{
+  this->failureObservers.push_back(observer);
+}
+std::vector<IFailureObserver *> &ScreenRecorder::GetFailureObservers()
+{
+  return this->failureObservers;
 }
 
 void ScreenRecorder::OpenAudio()
 {
+  AVInputFormat *inputFormat;
   AVDictionary *options = nullptr;
   int ret = 0;
-  //ref: https://ffmpeg.org/ffmpeg-devices.html
-  AVInputFormat *inputFormat;
 #ifdef WINDOWS
+  inputFormat = av_find_input_format("dshow");
+  std::string deviceName = DS_GetDefaultDevice("a");
   if (deviceName == "")
   {
-    deviceName = DS_GetDefaultDevice("a");
-    if (deviceName == "")
-    {
-      throw std::runtime_error("Fail to get default audio device, maybe no microphone.");
-    }
+    throw std::runtime_error("Failed to retrieve the default audio device");
   }
   deviceName = "audio=" + deviceName;
-  inputFormat = av_find_input_format("dshow");
 #elif __APPLE__
-  deviceName = ":0";
   inputFormat = av_find_input_format("avfoundation");
-
-  //"[[VIDEO]:[AUDIO]]"
+  std::string deviceName = ":0";
 #elif __linux__
-  deviceName = "default";
   inputFormat = av_find_input_format("pulse");
+  std::string deviceName = "default";
 #endif
 
   ret = avformat_open_input(&audioInFormatCtx, deviceName.c_str(), inputFormat, &options);
   if (ret != 0)
   {
-    throw std::runtime_error("Couldn't open input audio stream.");
+    throw std::runtime_error("Could not open input audio device");
   }
 
   audioInStream = getStreamByMediaType(audioInFormatCtx, AVMEDIA_TYPE_AUDIO);
@@ -81,7 +83,7 @@ void ScreenRecorder::OpenAudio()
 
   if (avcodec_open2(audioInCodecCtx, audioInCodec, nullptr) < 0)
   {
-    throw std::runtime_error("Could not open audio codec.");
+    throw std::runtime_error("Could not open audio decoder for input codec");
   }
 
   // audio converter, convert other fmt to requireAudioFmt
@@ -99,13 +101,10 @@ void ScreenRecorder::OpenAudio()
   audioFifo = av_audio_fifo_alloc(requireAudioFmt, audioInCodecCtx->channels,
                                   audioInCodecCtx->sample_rate * 2);
 
-  //--------------------------------------------------------------------------
-  // output context
-
   AVCodec *audioOutCodec = avcodec_find_encoder(AV_CODEC_ID_AAC);
   if (!audioOutCodec)
   {
-    throw std::runtime_error("Fail to find aac encoder. Please check your DLL.");
+    throw std::runtime_error("Failed to find AAC audio encoder");
   }
 
   audioOutCodecCtx = avcodec_alloc_context3(audioOutCodec);
@@ -117,81 +116,73 @@ void ScreenRecorder::OpenAudio()
   audioOutCodecCtx->time_base.num = 1;
   audioOutCodecCtx->time_base.den = audioOutCodecCtx->sample_rate;
 
-  int res = avcodec_open2(audioOutCodecCtx, audioOutCodec, NULL);
-  if (res < 0)
+  ret = avcodec_open2(audioOutCodecCtx, audioOutCodec, NULL);
+  if (ret < 0)
   {
-    throw std::runtime_error("Fail to open ouput audio encoder.");
+    throw std::runtime_error("Fail to open AAC ouput audio encoder");
   }
 
-  //Add a new stream to output,should be called by the user before avformat_write_header() for muxing
+  //Add a new stream to output, should be called by the user before avformat_write_header() for muxing
   audioOutStream = avformat_new_stream(outFormatCtx, audioOutCodec);
   if (audioOutStream == NULL)
   {
-    throw std::runtime_error("Fail to new a audio stream.");
+    throw std::runtime_error("Failed to create a new output audio stream");
   }
   avcodec_parameters_from_context(audioOutStream->codecpar, audioOutCodecCtx);
 }
 
 void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerate)
 {
+  AVInputFormat *inputFormat;
+  AVDictionary *options = nullptr;
+  int ret;
+
   this->width = std::max(2, width % 2 == 0 ? width : width - 1);
   this->height = std::max(2, height % 2 == 0 ? height : height - 1);
   this->framerate = framerate;
-
-  AVDictionary *options = nullptr;
-#ifdef __linux__
-  // X11 specific parameters
-  std::ostringstream size_ss;
-  size_ss << this->width << "x" << this->height;
-  std::ostringstream framerate_ss;
-  framerate_ss << framerate;
-  av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
-  av_dict_set(&options, "show_region", "1", 0);
-  av_dict_set(&options, "framerate", framerate_ss.str().c_str(), 0);
-#endif
-
   videoInFormatCtx = nullptr;
-  int ret;
 
-  //ref: https://ffmpeg.org/ffmpeg-devices.html
-  AVInputFormat *inputFormat;
 #ifdef WINDOWS
+  inputFormat = av_find_input_format("dshow");
+  std::string deviceName = DS_GetDefaultDevice("a");
   if (deviceName == "")
   {
-    deviceName = DS_GetDefaultDevice("a");
-    if (deviceName == "")
-    {
-      throw std::runtime_error("Fail to get default audio device, maybe no microphone.");
-    }
+    throw std::runtime_error("Failed to retrieve the default video device");
   }
   deviceName = "audio=" + deviceName;
-  inputFormat = av_find_input_format("dshow");
 #elif __APPLE__
-  //show_avfoundation_device();
-
-  deviceName = "1:";
   inputFormat = av_find_input_format("avfoundation");
+  std::string deviceName = "1:";
+
   std::ostringstream size_ss;
   size_ss << width << "x" << height;
   av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
   av_dict_set(&options, "pixel_format", "yuyv422", 0);
   av_dict_set(&options, "format", "yuv420p", 0);
-
-  //av_dict_set(&options, "framerate", "30", 0);
-
-  //"[[VIDEO]:[AUDIO]]"
 #elif __linux__
-  std::ostringstream deviceName_ss;
-  auto x11display = std::string(getenv("DISPLAY"));
-  deviceName_ss << x11display << "+" << x << "," << y;
-  deviceName = deviceName_ss.str();
   inputFormat = av_find_input_format("x11grab");
+
+  auto x11display = std::string(getenv("DISPLAY"));
+  std::ostringstream deviceName_ss;
+  deviceName_ss << x11display << "+" << x << "," << y;
+  std::string deviceName = deviceName_ss.str();
+
+  // X11 specific parameters
+  std::ostringstream size_ss;
+  std::ostringstream framerate_ss;
+
+  size_ss << this->width << "x" << this->height;
+  framerate_ss << framerate;
+
+  av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
+  av_dict_set(&options, "show_region", "1", 0);
+  av_dict_set(&options, "framerate", framerate_ss.str().c_str(), 0);
 #endif
 
   ret = avformat_open_input(&videoInFormatCtx, deviceName.c_str(), inputFormat, &options);
   if (ret != 0)
   {
-    throw std::runtime_error("Couldn't open input video stream.");
+    throw std::runtime_error("Could not open input video stream.");
   }
 
   videoInStream = getStreamByMediaType(videoInFormatCtx, AVMEDIA_TYPE_VIDEO);
@@ -202,13 +193,13 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 
   if (avcodec_open2(videoInCodecCtx, videoInCodec, nullptr) < 0)
   {
-    throw std::runtime_error("Could not open video codec.");
+    throw std::runtime_error("Could not open input video codec.");
   }
 
   AVCodec *videoOutCodec = avcodec_find_encoder(AV_CODEC_ID_H264);
   if (!videoOutCodec)
   {
-    throw std::runtime_error("Fail to find H264 encoder. Please check your DLL.");
+    throw std::runtime_error("Fail to find H264 encoder");
   }
 
   videoOutCodecCtx = avcodec_alloc_context3(videoOutCodec);
@@ -229,7 +220,7 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 
   if (avcodec_open2(videoOutCodecCtx, videoOutCodec, NULL) < 0)
   {
-    throw std::runtime_error("Fail to open ouput video encoder.");
+    throw std::runtime_error("Failed to open ouput video encoder.");
   }
 
   // Add a new stream to output,should be called by the user before avformat_write_header() for muxing
@@ -256,6 +247,7 @@ void ScreenRecorder::Start()
   {
     throw std::runtime_error("Fail to open output file.");
   }
+
   // write file header
   if (outFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
     outFormatCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -263,23 +255,30 @@ void ScreenRecorder::Start()
   {
     throw std::runtime_error("Fail to write header for audio.");
   }
-  if (audioInFormatCtx)
-    av_dump_format(audioInFormatCtx, 0, NULL, 0);
-  if (videoInFormatCtx)
-    av_dump_format(videoInFormatCtx, 0, NULL, 0);
-  av_dump_format(outFormatCtx, 0, NULL, 1);
+
+  // Debug informations
+  {
+    if (audioInFormatCtx)
+      av_dump_format(audioInFormatCtx, 0, NULL, 0);
+    if (videoInFormatCtx)
+      av_dump_format(videoInFormatCtx, 0, NULL, 0);
+    av_dump_format(outFormatCtx, 0, NULL, 1);
+  }
+
   workerThread = std::thread([this]()
                              {
                                this->isRun = true;
-                               puts("Start record.");
-                               fflush(stdout);
                                try
                                {
                                  this->StartEncode();
                                }
-                               catch (std::exception e)
+                               catch (const std::runtime_error &e)
                                {
-                                 this->failReason = e.what();
+                                 auto failureMessage = e.what();
+                                 for (auto observer : this->GetFailureObservers())
+                                 {
+                                   observer->handleFailure(failureMessage);
+                                 }
                                }
                              });
 }
@@ -328,7 +327,6 @@ void ScreenRecorder::SetPaused(bool paused)
 
 void ScreenRecorder::StartEncode()
 {
-
   int ret;
   AVFrame *inputFrame = av_frame_alloc();
   AVPacket *inputPacket = av_packet_alloc();
@@ -338,7 +336,6 @@ void ScreenRecorder::StartEncode()
 
   uint64_t audioFrameCount = 0;
   uint64_t videoFrameCount = 0;
-
   int64_t nextVideoPTS = 0, nextAudioPTS = 0;
   auto src_pix_fmt = correct_for_deprecated_pixel_format(videoInCodecCtx->pix_fmt);
   auto swsContext = sws_getContext(width, height, src_pix_fmt, width, height, PIX_SWS_CONTEXT, SWS_BICUBIC, nullptr,
@@ -511,8 +508,6 @@ void ScreenRecorder::StartEncode()
   av_frame_free(&inputFrame);
   av_frame_free(&outputFrame);
   sws_freeContext(swsContext);
-
-  printf("encode %lu audio packets in total.\n", audioFrameCount);
 }
 
 AVStream *ScreenRecorder::getStreamByMediaType(AVFormatContext *context, AVMediaType type)

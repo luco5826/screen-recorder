@@ -21,13 +21,14 @@ enum State
     STOP
 };
 
-class Recorder : public QMainWindow
+class Recorder : public QMainWindow, public IFailureObserver
 {
     Q_OBJECT
 
 public:
     Recorder(QWidget *parent = nullptr);
     ~Recorder();
+    void handleFailure(const std::string &message) override;
 
 private slots:
     void on_playButton_clicked();

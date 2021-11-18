@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <sstream>
 #include <thread>
 #include <ctime>
@@ -46,14 +47,20 @@ extern "C"
 
 using std::string;
 
+class IFailureObserver
+{
+public:
+  IFailureObserver(){};
+  ~IFailureObserver(){};
+  virtual void handleFailure(const std::string &message) = 0;
+};
+
 class ScreenRecorder
 {
 
 private:
   int width, height, framerate;
   string outfile;
-  string deviceName;
-  string failReason;
 
   AVFormatContext *audioInFormatCtx = nullptr;
   AVStream *audioInStream = nullptr;
@@ -75,23 +82,24 @@ private:
 
   std::atomic_bool isRun, isPaused;
   std::thread workerThread;
+  std::vector<IFailureObserver *> failureObservers;
 
 public:
-  ScreenRecorder(string filepath, string device)
-      : outfile(filepath), deviceName(device), failReason(""), isRun(false), isPaused(false) {}
+  ScreenRecorder(string filepath)
+      : outfile(filepath), isRun(false), isPaused(false)
+  {
+  }
 
   void Init();
+  void RegisterFailureObserver(IFailureObserver *observer);
+  std::vector<IFailureObserver *> &GetFailureObservers();
   void OpenAudio();
   void OpenVideo(int x = 0, int y = 0, int width = 800, int height = 600, int framerate = 30);
   void Start();
   void Stop();
   void SetPaused(bool paused);
 
-  ~ScreenRecorder()
-  {
-  }
-
-  std::string GetLastError() { return failReason; }
+  ~ScreenRecorder() = default;
 
 private:
   void StartEncode();
