@@ -1,0 +1,7 @@
+ScreenRecorder_autogen
+.vscode
+Makefile
+CMakeCache.txt
+cmake_install.cmake
+/ScreenRecorder
+ui_*

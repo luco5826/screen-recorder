@@ -183,7 +183,7 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 #elif __linux__
   std::ostringstream deviceName_ss;
   auto x11display = std::string(getenv("DISPLAY"));
-  deviceName_ss << x11display << ".0+" << x << "," << y;
+  deviceName_ss << x11display << "+" << x << "," << y;
   deviceName = deviceName_ss.str();
   inputFormat = av_find_input_format("x11grab");
 #endif
