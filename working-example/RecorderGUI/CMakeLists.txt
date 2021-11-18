@@ -38,8 +38,14 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
-         recorder.cpp recorder.h ui/Recorder.ui resizableframe.cpp resizableframe.h
-        ffmpeg/ScreenRecorder.h ffmpeg/ScreenRecorder.cpp)
+        resources.qrc
+        recorder.cpp
+        recorder.h
+        ui/Recorder.ui
+        resizableframe.cpp
+        resizableframe.h
+        ffmpeg/ScreenRecorder.h
+        ffmpeg/ScreenRecorder.cpp)
 #qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
 qt_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
 

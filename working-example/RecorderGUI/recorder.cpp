@@ -9,13 +9,13 @@
 Recorder::Recorder(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::Recorder),
-      screenRecorder(new ScreenRecorder("output", "")),
-      currentState(State::STOP)
+      currentState(State::STOP),
+      screenRecorder(new ScreenRecorder("output", ""))
 {
   ui->setupUi(this);
   screenRecorder->Init();
   timeToDisplay = QTime(0, 0, 0);
-  timer.setInterval(1000);
+  timer.setInterval(100);
   connect(&timer, SIGNAL(timeout()), this, SLOT(updateCaption()));
 
   auto resolution = ui->resolutionComboBox->currentText().split("x");
@@ -24,8 +24,8 @@ Recorder::Recorder(QWidget *parent)
 
 void Recorder::updateCaption()
 {
-  timeToDisplay = timeToDisplay.addSecs(1);
-  ui->timeLabel->setText(timeToDisplay.toString("hh:mm:ss"));
+  timeToDisplay = timeToDisplay.addMSecs(100);
+  ui->timeLabel->setText(timeToDisplay.toString("hh:mm:ss.zzz"));
 }
 
 Recorder::~Recorder()
@@ -45,7 +45,6 @@ void Recorder::on_playButton_clicked()
   }
 
   ui->resolutionComboBox->setDisabled(true);
-  ui->currentResolution->setText(QString::number(rf->width()) + "x" + QString::number(rf->height()));
   ui->pauseButton->setDisabled(false);
   ui->stopButton->setDisabled(false);
   ui->playButton->setDisabled(true);
@@ -58,14 +57,14 @@ void Recorder::on_pauseButton_clicked()
 {
   if (currentState == RECORDING)
   {
-    ui->pauseButton->setText("Resume");
+    ui->pauseButton->setIcon(QIcon(":/imgs/icons8-circled-play-48.png"));
     currentState = PAUSE;
     screenRecorder->SetPaused(true);
     timer.stop();
   }
   else if (currentState == PAUSE)
   {
-    ui->pauseButton->setText("Pause");
+    ui->pauseButton->setIcon(QIcon(":/imgs/icons8-pause-button-48.png"));
     screenRecorder->SetPaused(false);
     currentState = RECORDING;
     timer.start();
@@ -83,7 +82,7 @@ void Recorder::on_stopButton_clicked()
   ui->stopButton->setDisabled(true);
   ui->pauseButton->setDisabled(true);
   ui->playButton->setDisabled(false);
-  ui->pauseButton->setText("Pause");
+  ui->pauseButton->setIcon(QIcon(":/imgs/icons8-pause-button-48.png"));
   screenRecorder->Stop();
   timer.stop();
   screenRecorder->Init();

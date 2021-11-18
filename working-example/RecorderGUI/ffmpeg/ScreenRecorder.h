@@ -63,15 +63,15 @@ private:
   AVStream *videoInStream = nullptr;
   AVCodecContext *videoInCodecCtx = nullptr;
 
-  SwrContext *audioConverter;
-  AVAudioFifo *audioFifo;
+  SwrContext *audioConverter = nullptr;
+  AVAudioFifo *audioFifo = nullptr;
 
-  AVFormatContext *outFormatCtx;
+  AVFormatContext *outFormatCtx = nullptr;
 
-  AVStream *audioOutStream;
-  AVCodecContext *audioOutCodecCtx;
-  AVStream *videoOutStream;
-  AVCodecContext *videoOutCodecCtx;
+  AVStream *audioOutStream = nullptr;
+  AVCodecContext *audioOutCodecCtx = nullptr;
+  AVStream *videoOutStream = nullptr;
+  AVCodecContext *videoOutCodecCtx = nullptr;
 
   std::atomic_bool isRun, isPaused;
   std::thread workerThread;
