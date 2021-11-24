@@ -4,6 +4,7 @@
 #include <QTime>
 #include <QMessageBox>
 #include <QDebug>
+#include <QScreen>
 
 #include "ffmpeg/ScreenRecorder.h"
 
