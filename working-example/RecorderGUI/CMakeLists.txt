@@ -18,13 +18,10 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS ${UI_DIR}/)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-<<<<<<< HEAD
 if(MACOSX)
     set(CMAKE_PREFIX_PATH "/Users/alessandrobacci/Qt/6.2.0/macos/lib/cmake")
     include_directories(/usr/local/include)
 endif()
-=======
->>>>>>> Windows fix
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -37,7 +34,6 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
-<<<<<<< HEAD
         resources.qrc
         recorder.cpp
         recorder.h
@@ -45,29 +41,11 @@ set(PROJECT_SOURCES
         resizableframe.cpp
         resizableframe.h
         ffmpeg/ScreenRecorder.h
-        ffmpeg/ScreenRecorder.cpp)
-#qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
-qt_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
-=======
-        recorder.cpp
-        recorder.h
-        resizableframe.cpp
-        resizableframe.h
-        ui/MainView.ui
-        ui/Recorder.ui
-        ffmpeg/ScreenRecorder.h
         ffmpeg/ScreenRecorder.cpp
-        ffmpeg/ListAVDevices.cpp
-<<<<<<< HEAD
-        ffmpeg/ListAVDevices.h)
-qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui ui/MainView.ui)
->>>>>>> Windows fix
-=======
-        ffmpeg/ListAVDevices.h
-        resources.qrc)
-qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
+        )
+
+qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui)
 #qt_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
->>>>>>> Windows dependencies
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenRecorder

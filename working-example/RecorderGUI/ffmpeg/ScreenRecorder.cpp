@@ -53,18 +53,10 @@ void ScreenRecorder::OpenAudio()
   AVInputFormat *inputFormat;
   AVDictionary *options = nullptr;
   int ret = 0;
-<<<<<<< HEAD
-#ifdef WINDOWS
-  inputFormat = av_find_input_format("dshow");
-  std::string deviceName = DS_GetDefaultDevice("a");
-  if (deviceName == "")
-  {
-    throw std::runtime_error("Failed to retrieve the default audio device");
-=======
   //ref: https://ffmpeg.org/ffmpeg-devices.html
 #ifdef _WINDOWS
   // TODO: Find a way to get the default audio source (DS_GetDefaultDevice does not work for me - Luca)
-  deviceName = "Microfono (AUKEY PC-LM1 USB Microphone)";
+  std::string deviceName = "Microfono (AUKEY PC-LM1 USB Microphone)";
   if (deviceName == "")
   {
     //deviceName = DS_GetDefaultDevice("a");
@@ -72,7 +64,6 @@ void ScreenRecorder::OpenAudio()
     {
       throw std::runtime_error("Fail to get default audio device, maybe no microphone.");
     }
->>>>>>> Windows fix
   }
   deviceName = "audio=" + deviceName;
 #elif __APPLE__
@@ -147,59 +138,23 @@ void ScreenRecorder::OpenAudio()
 
 void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerate)
 {
-<<<<<<< HEAD
-  AVInputFormat *inputFormat;
-  AVDictionary *options = nullptr;
-  int ret;
-
-  this->width = std::max(2, width % 2 == 0 ? width : width - 1);
+    AVDictionary* options = nullptr;
+    int ret = 0;
+  this->width = std::max(2, (width % 2 == 0 ? width : width - 1));
   this->height = std::max(2, height % 2 == 0 ? height : height - 1);
-=======
-  this->width = max(2, (width % 2 == 0 ? width : width - 1));
-  this->height = max(2, height % 2 == 0 ? height : height - 1);
->>>>>>> Windows fix
   this->framerate = framerate;
   videoInFormatCtx = nullptr;
 
-<<<<<<< HEAD
-#ifdef WINDOWS
-  inputFormat = av_find_input_format("dshow");
-  std::string deviceName = DS_GetDefaultDevice("a");
-  if (deviceName == "")
-  {
-    throw std::runtime_error("Failed to retrieve the default video device");
-  }
-  deviceName = "audio=" + deviceName;
-#elif __APPLE__
-  inputFormat = av_find_input_format("avfoundation");
-  std::string deviceName = "1:";
-
-  std::ostringstream size_ss;
-  size_ss << width << "x" << height;
-  av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
-  av_dict_set(&options, "pixel_format", "yuyv422", 0);
-  av_dict_set(&options, "format", "yuv420p", 0);
-=======
   //ref: https://ffmpeg.org/ffmpeg-devices.html
 #ifdef _WINDOWS
-  if (deviceName == "")
-  {
-    deviceName = DS_GetDefaultDevice("v");
-    if (deviceName == "")
-    {
-      throw std::runtime_error("Fail to get default video device.");
-    }
-  }
   //deviceName = "video=" + deviceName;
   //AVInputFormat *inputFormat = av_find_input_format("dshow");
-  deviceName = "desktop";
+  std::string deviceName = "desktop";
   AVInputFormat* inputFormat = av_find_input_format("gdigrab");
 #elif MACOS
-  if (deviceName == "")
-    deviceName = ":0";
+  std::string deviceName = ":0";
   AVInputFormat *inputFormat = av_find_input_format("avfoundation");
   //"[[VIDEO]:[AUDIO]]"
->>>>>>> Windows fix
 #elif __linux__
   inputFormat = av_find_input_format("x11grab");
 
