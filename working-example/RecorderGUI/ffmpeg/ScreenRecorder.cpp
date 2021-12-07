@@ -116,7 +116,7 @@ void ScreenRecorder::OpenAudio()
   audioOutCodecCtx->channels = audioInStream->codecpar->channels;
   audioOutCodecCtx->channel_layout = av_get_default_channel_layout(audioInStream->codecpar->channels);
   audioOutCodecCtx->sample_rate = audioInStream->codecpar->sample_rate;
-  audioOutCodecCtx->sample_fmt = audioOutCodec->sample_fmts[0]; //for aac , there is AV_SAMPLE_FMT_FLTP =8
+  audioOutCodecCtx->sample_fmt = AV_SAMPLE_FMT_FLTP; //audioOutCodec->sample_fmts[0]; //for aac , there is AV_SAMPLE_FMT_FLTP =8
   audioOutCodecCtx->bit_rate = 48000;
   audioOutCodecCtx->time_base.num = 1;
   audioOutCodecCtx->time_base.den = audioOutCodecCtx->sample_rate;
@@ -138,8 +138,8 @@ void ScreenRecorder::OpenAudio()
 
 void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerate)
 {
-    AVDictionary* options = nullptr;
-    int ret = 0;
+  AVDictionary *options = nullptr;
+  int ret = 0;
   this->width = std::max(2, (width % 2 == 0 ? width : width - 1));
   this->height = std::max(2, height % 2 == 0 ? height : height - 1);
   this->framerate = framerate;
@@ -150,13 +150,13 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   //deviceName = "video=" + deviceName;
   //AVInputFormat *inputFormat = av_find_input_format("dshow");
   std::string deviceName = "desktop";
-  AVInputFormat* inputFormat = av_find_input_format("gdigrab");
+  AVInputFormat *inputFormat = av_find_input_format("gdigrab");
 #elif MACOS
   std::string deviceName = ":0";
   AVInputFormat *inputFormat = av_find_input_format("avfoundation");
   //"[[VIDEO]:[AUDIO]]"
 #elif __linux__
-  inputFormat = av_find_input_format("x11grab");
+  AVInputFormat *inputFormat = av_find_input_format("x11grab");
 
   auto x11display = std::string(getenv("DISPLAY"));
   std::ostringstream deviceName_ss;
