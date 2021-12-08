@@ -175,14 +175,12 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 
   // X11 specific parameters
   std::ostringstream size_ss;
-  std::ostringstream framerate_ss;
 
   size_ss << this->width << "x" << this->height;
-  framerate_ss << framerate;
 
   av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
   av_dict_set(&options, "show_region", "1", 0);
-  av_dict_set(&options, "framerate", framerate_ss.str().c_str(), 0);
+  av_dict_set(&options, "framerate", std::to_string(framerate).c_str(), 0);
 #endif
 
   ret = avformat_open_input(&videoInFormatCtx, deviceName.c_str(), inputFormat, &options);
@@ -223,6 +221,7 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   fps.num = 1;
   fps.den = framerate;
   videoOutCodecCtx->time_base = fps;
+  videoOutCodecCtx->framerate = fps;
   // videoOutCodecCtx->time_base = videoInCodecCtx->time_base;
   // videoOutCodecCtx->time_base.num = 1;
   // videoOutCodecCtx->time_base.den = videoOutCodecCtx->sample_rate;
