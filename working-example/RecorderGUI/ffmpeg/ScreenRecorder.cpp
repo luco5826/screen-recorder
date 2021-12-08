@@ -132,8 +132,13 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 {
   AVDictionary *options = nullptr;
   int ret = 0;
+#ifdef _WINDOWS
   this->width = max(2, (width % 2 == 0 ? width : width - 1));
   this->height = max(2, height % 2 == 0 ? height : height - 1);
+#else
+  this->width = std::max(2, (width % 2 == 0 ? width : width - 1));
+  this->height = std::max(2, height % 2 == 0 ? height : height - 1);
+#endif
   this->framerate = framerate;
   videoInFormatCtx = nullptr;
 
@@ -142,12 +147,12 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   //deviceName = "video=" + deviceName;
   //AVInputFormat *inputFormat = av_find_input_format("dshow");
   std::string deviceName = "desktop";
-  AVInputFormat* inputFormat = av_find_input_format("gdigrab");
+  AVInputFormat *inputFormat = av_find_input_format("gdigrab");
   // GDIGrab specific parameters
   std::ostringstream size_ss;
 
   size_ss << this->width << "x" << this->height;
-  
+
   av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
   av_dict_set(&options, "show_region", "1", 0);
   av_dict_set(&options, "framerate", std::to_string(framerate).c_str(), 0);
