@@ -67,9 +67,11 @@ set(PROJECT_SOURCES
         ffmpeg/ListAVDevices.cpp
         ffmpeg/ListAVDevices.h
         )
-
-qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui)
-#qt_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
+if(MACOSX)
+    qt_wrap_ui(PROJECT_SOURCES ui/Recorder.ui )
+else()
+    qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui)
+endif()
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenRecorder
@@ -123,5 +125,7 @@ set_target_properties(ScreenRecorder PROPERTIES
         )
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(ScreenRecorder)
-    qt5_wrap_ui()
+    if(!MACOSX)
+        qt5_wrap_ui()
+    endif()
 endif()

@@ -131,6 +131,7 @@ void ScreenRecorder::OpenAudio()
 void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerate)
 {
   AVDictionary *options = nullptr;
+
   int ret = 0;
 #ifdef _WINDOWS
   this->width = max(2, (width % 2 == 0 ? width : width - 1));
@@ -145,8 +146,8 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   //ref: https://ffmpeg.org/ffmpeg-devices.html
 #ifdef _WINDOWS
   std::string deviceName = "desktop";
-  AVInputFormat* inputFormat = av_find_input_format("gdigrab");
-  
+  AVInputFormat *inputFormat = av_find_input_format("gdigrab");
+
   // GDIGrab specific parameters
   std::ostringstream size_ss;
   size_ss << this->width << "x" << this->height;
@@ -155,9 +156,16 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
   av_dict_set(&options, "framerate", std::to_string(framerate).c_str(), 0);
   av_dict_set(&options, "offset_x", std::to_string(x).c_str(), 0);
   av_dict_set(&options, "offset_y", std::to_string(y).c_str(), 0);
-#elif MACOS
-  std::string deviceName = ":0";
+#elif __APPLE__
+
   AVInputFormat *inputFormat = av_find_input_format("avfoundation");
+  std::string deviceName = "1:";
+
+  std::ostringstream size_ss;
+  size_ss << width << "x" << height;
+  av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
+  av_dict_set(&options, "pixel_format", "yuyv422", 0);
+  av_dict_set(&options, "format", "yuv420p", 0);
   //"[[VIDEO]:[AUDIO]]"
 #elif __linux__
   AVInputFormat *inputFormat = av_find_input_format("x11grab");
