@@ -144,15 +144,12 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 
   //ref: https://ffmpeg.org/ffmpeg-devices.html
 #ifdef _WINDOWS
-  //deviceName = "video=" + deviceName;
-  //AVInputFormat *inputFormat = av_find_input_format("dshow");
   std::string deviceName = "desktop";
-  AVInputFormat *inputFormat = av_find_input_format("gdigrab");
+  AVInputFormat* inputFormat = av_find_input_format("gdigrab");
+  
   // GDIGrab specific parameters
   std::ostringstream size_ss;
-
   size_ss << this->width << "x" << this->height;
-
   av_dict_set(&options, "video_size", size_ss.str().c_str(), 0);
   av_dict_set(&options, "show_region", "1", 0);
   av_dict_set(&options, "framerate", std::to_string(framerate).c_str(), 0);
