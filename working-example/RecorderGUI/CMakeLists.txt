@@ -64,6 +64,8 @@ set(PROJECT_SOURCES
         resizableframe.h
         ffmpeg/ScreenRecorder.h
         ffmpeg/ScreenRecorder.cpp
+        ffmpeg/ListAVDevices.cpp
+        ffmpeg/ListAVDevices.h
         )
 
 qt5_wrap_ui(PROJECT_SOURCES ui/Recorder.ui)

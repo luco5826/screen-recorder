@@ -34,7 +34,7 @@ extern "C"
 #ifndef AUDIORECORDER_AUDIORECORDER_H
 #define AUDIORECORDER_AUDIORECORDER_H
 
-#ifdef WINDOWS
+#ifdef _WINDOWS
 #include "ListAVDevices.h"
 #endif
 

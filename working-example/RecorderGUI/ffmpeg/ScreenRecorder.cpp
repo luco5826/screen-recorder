@@ -50,22 +50,14 @@ std::vector<IFailureObserver *> &ScreenRecorder::GetFailureObservers()
 
 void ScreenRecorder::OpenAudio()
 {
-  AVInputFormat *inputFormat;
+  AVInputFormat *inputFormat = nullptr;
   AVDictionary *options = nullptr;
   int ret = 0;
   //ref: https://ffmpeg.org/ffmpeg-devices.html
 #ifdef _WINDOWS
   // TODO: Find a way to get the default audio source (DS_GetDefaultDevice does not work for me - Luca)
-  std::string deviceName = "Microfono (AUKEY PC-LM1 USB Microphone)";
-  if (deviceName == "")
-  {
-    //deviceName = DS_GetDefaultDevice("a");
-    if (deviceName == "")
-    {
-      throw std::runtime_error("Fail to get default audio device, maybe no microphone.");
-    }
-  }
-  deviceName = "audio=" + deviceName;
+  inputFormat = av_find_input_format("dshow");
+  std::string deviceName = "audio=" + DS_GetDefaultAudioDevice();
 #elif __APPLE__
   inputFormat = av_find_input_format("avfoundation");
   std::string deviceName = ":0";
@@ -140,8 +132,8 @@ void ScreenRecorder::OpenVideo(int x, int y, int width, int height, int framerat
 {
   AVDictionary *options = nullptr;
   int ret = 0;
-  this->width = std::max(2, (width % 2 == 0 ? width : width - 1));
-  this->height = std::max(2, height % 2 == 0 ? height : height - 1);
+  this->width = max(2, (width % 2 == 0 ? width : width - 1));
+  this->height = max(2, height % 2 == 0 ? height : height - 1);
   this->framerate = framerate;
   videoInFormatCtx = nullptr;
 
