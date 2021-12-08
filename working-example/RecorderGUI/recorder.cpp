@@ -114,9 +114,9 @@ void Recorder::on_resolutionComboBox_currentTextChanged(const QString &arg1)
       // Apply the scale factor on Mac OS
       rf->setFrameWidth(screen()->geometry().width() * 2);
       rf->setFrameHeight(screen()->geometry().height() * 2);
-    #elif __linux__
-      rf->setFrameWidth( screen()->geometry().width() );
-      rf->setFrameHeight(screen()->geometry().height() );
+    #else
+      rf->setFrameWidth(QApplication::primaryScreen()->geometry().width() );
+      rf->setFrameHeight(QApplication::primaryScreen()->geometry().height() );
     #endif
   } else {
     rf->setFrameWidth(arg1.split("x")[0].toInt());
